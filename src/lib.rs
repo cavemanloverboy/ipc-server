@@ -23,6 +23,9 @@ pub struct IpcServer<C: IpcServerCommand> {
 }
 
 impl<C: IpcServerCommand> IpcServer<C> {
+    /// Initialize a new IpcServer. Recall that there is no dedicated server
+    /// thread. You must call `handle_new_messages` to poll for and process
+    /// new messages
     pub fn new(socket_path: &str) -> io::Result<IpcServer<C>> {
         if Path::new(socket_path).exists() {
             remove_file(socket_path)?;
@@ -46,6 +49,7 @@ impl<C: IpcServerCommand> IpcServer<C> {
         })
     }
 
+    /// Polls for new messages from any clients, and processes and responds.
     pub fn handle_new_messages<'a>(&mut self, mut context: C::Context<'a>) -> io::Result<()> {
         self.poll
             .poll(&mut self.events, Some(Duration::from_millis(100)))?;
@@ -114,6 +118,9 @@ fn would_block(err: &std::io::Error) -> bool {
     err.kind() == std::io::ErrorKind::WouldBlock
 }
 
+/// Serialize and write the `command` provided to the `UnixStream` at the
+/// `socket_path` provided. If there is an active `IpcServer`, it will receive
+/// and process this command upon polling.
 pub fn client_send<C: IpcServerCommand>(command: &C, socket_path: &str) {
     let mut stream = UnixStream::connect(socket_path).unwrap();
     let payload = serde_json::to_string(command).unwrap();
