@@ -110,7 +110,7 @@ impl<C: IpcServerCommand> IpcServer<C> {
     }
 }
 
-pub fn would_block(err: &std::io::Error) -> bool {
+fn would_block(err: &std::io::Error) -> bool {
     err.kind() == std::io::ErrorKind::WouldBlock
 }
 
