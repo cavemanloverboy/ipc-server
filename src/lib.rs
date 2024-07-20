@@ -2,7 +2,7 @@ use mio::net::{UnixListener, UnixStream};
 use mio::{Events, Interest, Poll, Token};
 use serde::{Deserialize, Serialize};
 use std::fs::{remove_file, set_permissions, Permissions};
-use std::io::{self, Read, Write};
+use std::io::{self, Read};
 use std::marker::PhantomData;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
@@ -62,9 +62,8 @@ impl<C: IpcServerCommand> IpcServer<C> {
                             let mut buffer = [0; 1024];
                             match stream.read(&mut buffer) {
                                 Ok(bytes_read) => {
-                                    let payload = String::from_utf8_lossy(&buffer[..bytes_read]);
-                                    let command =
-                                        serde_json::from_str::<C>(&payload).map_err(|e| {
+                                    let command = bincode::deserialize::<C>(&buffer[..bytes_read])
+                                        .map_err(|e| {
                                             io::Error::new(io::ErrorKind::InvalidData, e)
                                         })?;
                                     self.process_command(command, &mut context, &mut stream)?;
@@ -98,7 +97,7 @@ impl<C: IpcServerCommand> IpcServer<C> {
     ) -> io::Result<()> {
         let response = command.process(context);
         loop {
-            match serde_json::to_writer(&mut *stream, &response)
+            match bincode::serialize_into(&mut *stream, &response)
                 .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
             {
                 Ok(()) => return Ok(()),
@@ -123,19 +122,17 @@ fn would_block(err: &std::io::Error) -> bool {
 /// and process this command upon polling.
 pub fn client_send<C: IpcServerCommand>(command: &C, socket_path: &str) {
     let mut stream = UnixStream::connect(socket_path).unwrap();
-    let payload = serde_json::to_string(command).unwrap();
-    stream.write_all(payload.as_bytes()).unwrap();
+    bincode::serialize_into(&mut stream, command).unwrap();
     println!("sent command: {:?}", command);
 
     loop {
         let mut buffer = [0; 1024];
         match stream.read(&mut buffer) {
             Ok(bytes_read) => {
-                let response_str = String::from_utf8_lossy(&buffer[..bytes_read]);
-                if let Ok(response) = serde_json::from_str::<C::Response>(&response_str) {
+                if let Ok(response) = bincode::deserialize::<C::Response>(&buffer[..bytes_read]) {
                     println!("received response: {:?}", response);
                 } else {
-                    eprintln!("failed to parse response: {}", response_str);
+                    eprintln!("failed to parse response: {:?}", &buffer[..bytes_read]);
                 }
                 return;
             }
