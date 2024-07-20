@@ -52,7 +52,7 @@ impl<C: IpcServerCommand> IpcServer<C> {
     /// Polls for new messages from any clients, and processes and responds.
     pub fn handle_new_messages<'a>(&mut self, mut context: C::Context<'a>) -> io::Result<()> {
         self.poll
-            .poll(&mut self.events, Some(Duration::from_millis(100)))?;
+            .poll(&mut self.events, Some(Duration::from_millis(1)))?;
 
         for event in self.events.iter() {
             match event.token() {
