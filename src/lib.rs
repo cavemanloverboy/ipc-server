@@ -6,7 +6,6 @@ use std::io::{self, Read};
 use std::marker::PhantomData;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
-use std::time::Duration;
 
 pub trait IpcServerCommand: Serialize + for<'a> Deserialize<'a> + std::fmt::Debug {
     type Response: Serialize + for<'a> Deserialize<'a> + std::fmt::Debug;
