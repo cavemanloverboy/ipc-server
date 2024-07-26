@@ -1,6 +1,6 @@
 # `ipc-server`: lazy and asynchronous IPC server
 
-This library allows independent client and server processes on the same machine to pass messages via Unix sockets that are readable and writable exclusively by the current user. This form of inter-process communication (IPC) is suitable for run time configurable variables by an admin, and is in fact inspired by solana's admin rpc service.
+This library allows independent client and server processes on the same machine to pass messages via Unix sockets that are readable and writable exclusively by the current user. This form of inter-process communication (IPC) is suitable use cases such as management of run time configurable variables by an admin, and is in fact inspired by solana's admin rpc service.
 
 Unlike other servers, this server is lazy and asynchronous. There is no dedicated server thead that is in a busy loop or awaiting messages. Instead, the server type exposes a poll method that you can integrate within some loop in your application.
 
@@ -12,7 +12,7 @@ See `examples/simple/simple.rs` for a fully self-contained and self-explanatory 
 
 ### Messages
 
-This server uses `bincode` for the serialization and deserialization of messages. First implement the `IpcServerCommand` for your message
+This server uses `bincode` for the serialization and deserialization of messages. First, you must implement the `IpcServerCommand` for your message
 
 ```rust
 pub trait IpcServerCommand: Serialize + for<'a> Deserialize<'a> + std::fmt::Debug {
