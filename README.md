@@ -80,7 +80,7 @@ The `IpcServer` type is generic over the command. Upon specifying the message ty
 
 ```rust
 let socket_path = "ipc-server-path-example.sock"
-let server = IpcServer::new(socket_path).unwrap();
+let server = IpcServer::<ClientCommand>::new(socket_path).unwrap();
 ```
 
 This server is now initialized. But remember, there is no dedicated server thread. No messages will be received or processed until the `server.handle_new_messages(..)` method is called. Your application must define how to prepare the `Context<'a>`. This will likely be either nothing or some reference to a data structure or database. This poll method will read, process, and respond to all outstanding messages.
