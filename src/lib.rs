@@ -6,6 +6,7 @@ use std::io::{self, Read};
 use std::marker::PhantomData;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
+use std::time::Duration;
 
 pub trait IpcServerCommand: Serialize + for<'a> Deserialize<'a> + std::fmt::Debug {
     type Response: Serialize + for<'a> Deserialize<'a> + std::fmt::Debug;
@@ -50,7 +51,8 @@ impl<C: IpcServerCommand> IpcServer<C> {
 
     /// Polls for new messages from any clients, and processes and responds.
     pub fn handle_new_messages<'a>(&mut self, mut context: C::Context<'a>) -> io::Result<()> {
-        self.poll.poll(&mut self.events, None)?;
+        self.poll
+            .poll(&mut self.events, Some(Duration::from_nanos(10)))?;
 
         for event in self.events.iter() {
             match event.token() {
