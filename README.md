@@ -23,7 +23,7 @@ pub trait IpcServerCommand: Serialize + for<'a> Deserialize<'a> + std::fmt::Debu
 }
 ```
 
-This trait tells the server how to process the command. We recommend using an enum to allow for multiple types of message. The `Context<'a>` type allows the server to access state that is external to the server (in-memory or persistent state, such as a vector, hashmap, or persistent/external database). In the `simple` example, for example, there are three types of messages:
+This trait tells the server how to process the command. We recommend using an enum to allow for multiple types of messages. The `Context<'a>` type allows the server to access state that is external to the server (in-memory or persistent state, such as a vector, hashmap, or persistent/external database). In the `simple` example, for example, there are three types of messages:
 
 ```rust
 #[derive(Subcommand, Serialize, Deserialize, Debug)]
